@@ -1,0 +1,23 @@
+service: customer-api
+frameworkVersion: '^3.0.0'
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-southeast-2
+functions:
+  customers:
+    handler: src/handler.handler
+    events:
+      - httpApi:
+          path: /customers
+          method: GET
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    target: node18
