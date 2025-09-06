@@ -2,8 +2,9 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { fetchCustomers } from '../api/customer';
-import type { Customer, CustomerResponse } from '../types/customer-types';
+import type { Customer, CustomerResponse, CustomerFilters } from '../types/customer-types';
 import { media, responsivePadding, responsiveFontSize, responsiveButtonPadding } from '../styles/responsive';
+import { Filter } from './Filter';
 
 // Optimized styled components
 const TableContainer = styled.div`
@@ -175,20 +176,25 @@ const StatusMessage = styled.div<{ $isError?: boolean }>`
 
 export const CustomerTable = () => {
     const [page, setPage] = React.useState(1);
-    const pageSize = 10;
+    const [announceText, setAnnounceText] = React.useState('');
+    const [filters, setFilters] = React.useState<CustomerFilters>({});
+    const [tempFilters, setTempFilters] = React.useState<CustomerFilters>({});
+    const pageSize = 20;
 
     const { data, isLoading, error } = useQuery<CustomerResponse>({
-        queryKey: ['customers', page, pageSize],
-        queryFn: () => fetchCustomers(page, pageSize),
+        queryKey: ['customers', page, pageSize, filters],
+        queryFn: () => fetchCustomers(page, pageSize, filters),
         placeholderData: (previousData) => previousData,
     });
 
     const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
+    const hasActiveFilters = Object.values(filters).some(value => value);
 
     const handlePreviousPage = () => {
         if (page > 1) {
             const newPage = Math.max(1, page - 1);
             setPage(newPage);
+            setAnnounceText(`Navigated to page ${newPage} of ${totalPages}`);
         }
     };
 
@@ -196,7 +202,29 @@ export const CustomerTable = () => {
         if (data && data.items.length === pageSize && page < totalPages) {
             const newPage = page + 1;
             setPage(newPage);
+            setAnnounceText(`Navigated to page ${newPage} of ${totalPages}`);
         }
+    };
+
+    // Filter handlers - simplified interface for the Filter component
+    const handleFilterChange = (field: keyof CustomerFilters, value: string) => {
+        setTempFilters(prev => ({
+            ...prev,
+            [field]: value || undefined
+        }));
+    };
+
+    const handleApplyFilters = () => {
+        setFilters({ ...tempFilters });
+        setPage(1); // Reset to first page when applying filters
+        setAnnounceText(`Filters applied. Showing ${data?.total || 0} results.`);
+    };
+
+    const handleClearFilters = () => {
+        setFilters({});
+        setTempFilters({});
+        setPage(1);
+        setAnnounceText('Filters cleared.');
     };
 
     const handleKeyDown = (event: React.KeyboardEvent, action: () => void) => {
@@ -224,6 +252,19 @@ export const CustomerTable = () => {
 
     return (
         <>
+            <div aria-live="polite" aria-atomic="true" className="sr-only">
+                {announceText}
+            </div>
+
+            <Filter
+                filters={filters}
+                tempFilters={tempFilters}
+                onFilterChange={handleFilterChange}
+                onApplyFilters={handleApplyFilters}
+                onClearFilters={handleClearFilters}
+                hasActiveFilters={hasActiveFilters}
+            />
+
             <TableContainer>
                 <StyledTable
                     id="customer-table"
@@ -232,6 +273,7 @@ export const CustomerTable = () => {
                 >
                     <caption id="table-description" className="sr-only">
                         Table showing customer information including ID, name, email, and registration date.
+                        {hasActiveFilters && 'Results are filtered. '}
                         Currently showing page {page} of {totalPages}.
                     </caption>
                     <TableHeader>
@@ -291,7 +333,7 @@ export const CustomerTable = () => {
                 </PaginationButton>
 
                 <TotalInfo aria-label={`Total customers: ${data?.total || 0}`}>
-                    ({data?.total || 0} customers)
+                    ({data?.total || 0} total{hasActiveFilters ? ' (filtered)' : ''})
                 </TotalInfo>
             </PaginationContainer>
         </>
