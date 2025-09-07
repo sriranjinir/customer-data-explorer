@@ -1,13 +1,21 @@
 {
   "name": "customer-data-explorer-backend",
   "version": "1.0.0",
-  "description": "Backend for Customer Data Explorer",
+  "description": "Backend for Customer Data Explorer with AWS API Gateway",
   "main": "src/handler.ts",
   "scripts": {
     "dev": "serverless offline",
     "build": "tsc",
     "test": "jest",
-    "deploy": "serverless deploy"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:staging": "serverless deploy --stage staging",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f getCustomers -t",
+    "info": "serverless info"
   },
   "dependencies": {
     "aws-lambda": "^1.0.7"
@@ -21,7 +29,6 @@
     "typescript": "^5.3.3",
     "serverless": "^3.38.0",
     "serverless-offline": "^13.3.0",
-    "serverless-plugin-typescript": "^2.1.5",
     "serverless-esbuild": "^1.52.1"
   }
 }
