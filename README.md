@@ -23,3 +23,11 @@ frontend: npm install
 - Configure AWS creds in env/GitHub Secrets
 - cd backend && npx serverless deploy
 - cd frontend && npm run build && aws s3 sync dist/ s3://my-bucket
+
+
+Considerations:
+=================
+
+1. I am developing CI/CD pipeline for this, may commit the code later
+2. Filtering can be enabled in the Column header, which saves space in the page. 
+
