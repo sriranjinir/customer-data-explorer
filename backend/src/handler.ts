@@ -1,79 +1,82 @@
-import type { APIGatewayProxyHandler } from 'aws-lambda';
-import type { CustomerResponse, CustomerFilters } from './types';
-import customers from './data/customers.json';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { CustomerDataService } from './services/customerDataService';
+import { CustomerFilterService, CustomerFilters } from './services/customerFilterService';
+import { PaginationService } from './services/paginationService';
+import { ResponseHandler } from './utils/responseHandler';
 
-const DEFAULT_PAGE = 1, DEFAULT_PAGE_SIZE = 20, MAX_PAGE_SIZE = 100;
+/**
+ * Extracts and validates query parameters from the API Gateway event
+ * @param event - API Gateway event object
+ * @returns Parsed query parameters
+ */
+function extractQueryParams(event: APIGatewayProxyEvent) {
+  const queryParams = event.queryStringParameters || {};
 
-export const handler: APIGatewayProxyHandler = async (event) => {
-    try {
-        const qs = event.queryStringParameters || {};
-        const page = Math.max(1, parseInt(qs.page || '1', 10) || DEFAULT_PAGE);
-        let pageSize = Math.min(MAX_PAGE_SIZE, parseInt(qs.pageSize || `${DEFAULT_PAGE_SIZE}`, 10) || DEFAULT_PAGE_SIZE);
+  return {
+    page: parseInt(queryParams.page || '1', 10),
+    pageSize: parseInt(queryParams.pageSize || '10', 10),
+    filters: {
+      id: queryParams.id || '',
+      fullName: queryParams.fullName || '',
+      email: queryParams.email || '',
+      registrationDate: queryParams.registrationDate || '',
+    } as CustomerFilters
+  };
+}
 
-        if (isNaN(page) || isNaN(pageSize) || pageSize <= 0) {
-            return { statusCode: 400, body: JSON.stringify({ message: 'Invalid pagination parameters' }) };
-        }
+/**
+ * Lambda handler for getting customers with filtering and pagination
+ */
+export const getCustomers = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // Extract and validate query parameters
+    const { page, pageSize, filters } = extractQueryParams(event);
 
-        // Extract filters from query parameters
-        const filters: CustomerFilters = {
-            id: qs.id || undefined,
-            fullName: qs.fullName || undefined,
-            email: qs.email || undefined,
-            registrationDate: qs.registrationDate || undefined,
-        };
-
-        // Apply filters
-        let filteredCustomers = customers.filter(customer => {
-            // Filter by ID (exact match)
-            if (filters.id && !customer.id.toLowerCase().includes(filters.id.toLowerCase())) {
-                return false;
-            }
-
-            // Filter by full name (partial match, case-insensitive)
-            if (filters.fullName && !customer.fullName.toLowerCase().includes(filters.fullName.toLowerCase())) {
-                return false;
-            }
-
-            // Filter by email (partial match, case-insensitive)
-            if (filters.email && !customer.email.toLowerCase().includes(filters.email.toLowerCase())) {
-                return false;
-            }
-
-            // Filter by registration date (partial match for formatted date)
-            if (filters.registrationDate) {
-                const formattedDate = new Date(customer.registrationDate).toLocaleDateString();
-                if (!formattedDate.includes(filters.registrationDate)) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        const start = (page - 1) * pageSize;
-        const items = filteredCustomers.slice(start, start + pageSize);
-
-        const result: CustomerResponse = {
-            items,
-            total: filteredCustomers.length,
-            page,
-            pageSize,
-            totalPages: Math.ceil(filteredCustomers.length / pageSize),
-            filters: Object.keys(filters).some(key => filters[key as keyof CustomerFilters]) ? filters : undefined
-        };
-
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
-                'Access-Control-Allow-Methods': 'GET, OPTIONS'
-            },
-            body: JSON.stringify(result)
-        };
-    } catch (err) {
-        console.error(err);
-        return { statusCode: 500, body: JSON.stringify({ message: 'Internal server error' }) };
+    // Validate filters
+    const filterValidation = CustomerFilterService.validateFilters(filters);
+    if (!filterValidation.isValid) {
+      return ResponseHandler.validationError(filterValidation.errors);
     }
+
+    // Get all customers from data service
+    const allCustomers = CustomerDataService.getAllCustomers();
+
+    // Apply filters
+    const filteredCustomers = CustomerFilterService.applyFilters(allCustomers, filters);
+
+    // Apply pagination
+    const paginationResult = PaginationService.paginate(filteredCustomers, page, pageSize);
+
+    // Create response
+    const response = PaginationService.createCustomerResponse(paginationResult);
+
+    return ResponseHandler.success(response);
+
+  } catch (error) {
+    console.error('Error in getCustomers handler:', error);
+    return ResponseHandler.error('Internal server error');
+  }
+};
+
+/**
+ * Lambda handler for health check endpoint
+ */
+export const healthCheck = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    const healthData = {
+      message: 'Customer Data Explorer API is healthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      totalCustomers: CustomerDataService.getTotalCustomerCount()
+    };
+
+    return ResponseHandler.success(healthData);
+  } catch (error) {
+    console.error('Error in healthCheck handler:', error);
+    return ResponseHandler.error('Health check failed');
+  }
 };

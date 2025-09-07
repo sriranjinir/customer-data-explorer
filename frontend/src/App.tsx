@@ -1,7 +1,18 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import styled from 'styled-components';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { CustomerTable } from "./components/CustomerTable";
+import { CustomerTableProvider } from "./contexts/CustomerTableContext";
 import { media } from "./styles/responsive";
+
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 // Optimized styled components
 const AppContainer = styled.div`
@@ -48,7 +59,9 @@ const Main = styled.main`
     display: flex;
     flex-direction: column;
     align-items: center;
+    max-width: 1200px;
     width: 100%;
+    margin: 0 auto;
     
     ${media.tablet} {
         padding: 1rem;
@@ -85,26 +98,26 @@ const Footer = styled.footer`
     }
 `;
 
-export default function App() {
-    return (
-        <Router>
-            <AppContainer>
-                <Header role="banner">
-                    <HeaderTitle id="app-title">Customer Data Explorer</HeaderTitle>
-                </Header>
-
-                <Main role="main" aria-labelledby="app-title">
-                    <ContentContainer>
-                        <Routes>
-                            <Route path="/" element={<CustomerTable />} />
-                        </Routes>
-                    </ContentContainer>
-                </Main>
-
-                <Footer role="contentinfo">
-                    &copy; {new Date().getFullYear()} Customer Data Explorer
-                </Footer>
-            </AppContainer>
-        </Router>
-    );
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CustomerTableProvider>
+        <AppContainer>
+          <Header>
+            <HeaderTitle>Customer Data Explorer</HeaderTitle>
+          </Header>
+            <ContentContainer>
+          <Main>
+            <CustomerTable />
+          </Main>
+            </ContentContainer>
+          <Footer>
+            <p>&copy; 2025 Customer Data Explorer. All rights reserved.</p>
+          </Footer>
+        </AppContainer>
+      </CustomerTableProvider>
+    </QueryClientProvider>
+  );
 }
+
+export default App;

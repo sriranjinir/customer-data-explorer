@@ -1,28 +1,24 @@
-import type { CustomerResponse, CustomerFilters } from '../types/customer-types';
+import type {CustomerResponse, CustomerFilters} from '../types/customer-types';
+
+const API_BASE_URL = 'http://localhost:3000/api';
 
 export async function fetchCustomers(
-  page: number,
-  pageSize: number,
-  filters?: CustomerFilters
+  page: number = 1,
+  pageSize: number = 10,
+  filters: CustomerFilters = { id: '', fullName: '', email: '', registrationDate: '' }
 ): Promise<CustomerResponse> {
-  const searchParams = new URLSearchParams({
+  const params = new URLSearchParams({
     page: page.toString(),
     pageSize: pageSize.toString(),
+    ...Object.fromEntries(
+      Object.entries(filters).filter(([_, value]) => value !== '')
+    ),
   });
 
-  // Add filters to search params if provided
-  if (filters) {
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        searchParams.append(key, value);
-      }
-    });
-  }
-
-  const response = await fetch(`http://localhost:3000/customers?${searchParams.toString()}`);
+  const response = await fetch(`${API_BASE_URL}/customers?${params}`);
 
   if (!response.ok) {
-    throw new Error('Failed to fetch customers');
+    throw new Error(`Failed to fetch customers: ${response.statusText}`);
   }
 
   return response.json();
