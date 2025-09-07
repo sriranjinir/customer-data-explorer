@@ -134,7 +134,6 @@ const FilterButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
 `;
 
 export const Filter: React.FC<FilterProps> = ({
-  filters,
   tempFilters,
   onFilterChange,
   onApplyFilters,

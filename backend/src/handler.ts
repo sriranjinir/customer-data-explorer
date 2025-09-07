@@ -1,102 +1,82 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { Customer, CustomerResponse } from './types';
-import * as customersData from './data/customers.json';
+import { CustomerDataService } from './services/customerDataService';
+import { CustomerFilterService, CustomerFilters } from './services/customerFilterService';
+import { PaginationService } from './services/paginationService';
+import { ResponseHandler } from './utils/responseHandler';
 
-const customers: Customer[] = customersData.customers || [];
+/**
+ * Extracts and validates query parameters from the API Gateway event
+ * @param event - API Gateway event object
+ * @returns Parsed query parameters
+ */
+function extractQueryParams(event: APIGatewayProxyEvent) {
+  const queryParams = event.queryStringParameters || {};
 
-// Helper function to convert DD/MM/YYYY to YYYY-MM-DD for comparison
-function convertDateFormat(ddmmyyyy: string): string | null {
-  if (!ddmmyyyy) return null;
-
-  // Match DD/MM/YYYY format
-  const dateMatch = ddmmyyyy.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!dateMatch) return null;
-
-  const [, day, month, year] = dateMatch;
-  // Convert to YYYY-MM-DD format with zero padding
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-}
-
-export const getCustomers = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
-  try {
-    const queryParams = event.queryStringParameters || {};
-    const page = parseInt(queryParams.page || '1', 10);
-    const pageSize = parseInt(queryParams.pageSize || '10', 10);
-
-    // Extract filter parameters
-    const filters = {
+  return {
+    page: parseInt(queryParams.page || '1', 10),
+    pageSize: parseInt(queryParams.pageSize || '10', 10),
+    filters: {
       id: queryParams.id || '',
       fullName: queryParams.fullName || '',
       email: queryParams.email || '',
       registrationDate: queryParams.registrationDate || '',
-    };
+    } as CustomerFilters
+  };
+}
+
+/**
+ * Lambda handler for getting customers with filtering and pagination
+ */
+export const getCustomers = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // Extract and validate query parameters
+    const { page, pageSize, filters } = extractQueryParams(event);
+
+    // Validate filters
+    const filterValidation = CustomerFilterService.validateFilters(filters);
+    if (!filterValidation.isValid) {
+      return ResponseHandler.validationError(filterValidation.errors);
+    }
+
+    // Get all customers from data service
+    const allCustomers = CustomerDataService.getAllCustomers();
 
     // Apply filters
-    let filteredCustomers = customers.filter((customer) => {
-      // Filter by ID
-      if (filters.id && !customer.id.toLowerCase().includes(filters.id.toLowerCase())) {
-        return false;
-      }
-
-      // Filter by Full Name
-      if (filters.fullName && !customer.fullName.toLowerCase().includes(filters.fullName.toLowerCase())) {
-        return false;
-      }
-
-      // Filter by Email
-      if (filters.email && !customer.email.toLowerCase().includes(filters.email.toLowerCase())) {
-        return false;
-      }
-
-      // Filter by Registration Date
-      if (filters.registrationDate) {
-        const filterDate = convertDateFormat(filters.registrationDate);
-        if (!filterDate) {
-          // If the date format is invalid, no match
-          return false;
-        }
-
-        // Check if the customer's registration date matches the filter date
-        if (customer.registrationDate !== filterDate) {
-          return false;
-        }
-      }
-
-      return true;
-    });
+    const filteredCustomers = CustomerFilterService.applyFilters(allCustomers, filters);
 
     // Apply pagination
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedCustomers = filteredCustomers.slice(startIndex, endIndex);
+    const paginationResult = PaginationService.paginate(filteredCustomers, page, pageSize);
 
-    const response: CustomerResponse = {
-      items: paginatedCustomers,
-      total: filteredCustomers.length,
-    };
+    // Create response
+    const response = PaginationService.createCustomerResponse(paginationResult);
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      },
-      body: JSON.stringify(response),
-    };
+    return ResponseHandler.success(response);
+
   } catch (error) {
-    console.error('Error fetching customers:', error);
-    return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-      body: JSON.stringify({ error: 'Internal server error' }),
-    };
+    console.error('Error in getCustomers handler:', error);
+    return ResponseHandler.error('Internal server error');
   }
 };
 
+/**
+ * Lambda handler for health check endpoint
+ */
+export const healthCheck = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    const healthData = {
+      message: 'Customer Data Explorer API is healthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      totalCustomers: CustomerDataService.getTotalCustomerCount()
+    };
+
+    return ResponseHandler.success(healthData);
+  } catch (error) {
+    console.error('Error in healthCheck handler:', error);
+    return ResponseHandler.error('Health check failed');
+  }
+};

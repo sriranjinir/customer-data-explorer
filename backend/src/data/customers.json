@@ -119,7 +119,186 @@
       "fullName": "Ashley Walker",
       "email": "ashley.walker@email.com",
       "registrationDate": "2024-08-23"
+    },
+    {
+      "id": "CUST-021",
+      "fullName": "Brian Cooper",
+      "email": "brian.cooper@email.com",
+      "registrationDate": "2024-09-15"
+    },
+    {
+      "id": "CUST-022",
+      "fullName": "Michelle Turner",
+      "email": "michelle.turner@email.com",
+      "registrationDate": "2024-10-03"
+    },
+    {
+      "id": "CUST-023",
+      "fullName": "Steven Parker",
+      "email": "steven.parker@email.com",
+      "registrationDate": "2024-11-12"
+    },
+    {
+      "id": "CUST-024",
+      "fullName": "Angela Collins",
+      "email": "angela.collins@email.com",
+      "registrationDate": "2024-12-07"
+    },
+    {
+      "id": "CUST-025",
+      "fullName": "Gregory Evans",
+      "email": "gregory.evans@email.com",
+      "registrationDate": "2025-01-18"
+    },
+    {
+      "id": "CUST-026",
+      "fullName": "Patricia Stewart",
+      "email": "patricia.stewart@email.com",
+      "registrationDate": "2025-02-25"
+    },
+    {
+      "id": "CUST-027",
+      "fullName": "Mark Phillips",
+      "email": "mark.phillips@email.com",
+      "registrationDate": "2025-03-14"
+    },
+    {
+      "id": "CUST-028",
+      "fullName": "Helen Morris",
+      "email": "helen.morris@email.com",
+      "registrationDate": "2025-04-02"
+    },
+    {
+      "id": "CUST-029",
+      "fullName": "Anthony Reed",
+      "email": "anthony.reed@email.com",
+      "registrationDate": "2025-05-19"
+    },
+    {
+      "id": "CUST-030",
+      "fullName": "Catherine Ward",
+      "email": "catherine.ward@email.com",
+      "registrationDate": "2025-06-11"
+    },
+    {
+      "id": "CUST-031",
+      "fullName": "Paul Hughes",
+      "email": "paul.hughes@email.com",
+      "registrationDate": "2025-07-08"
+    },
+    {
+      "id": "CUST-032",
+      "fullName": "Deborah Foster",
+      "email": "deborah.foster@email.com",
+      "registrationDate": "2025-08-21"
+    },
+    {
+      "id": "CUST-033",
+      "fullName": "Ryan Butler",
+      "email": "ryan.butler@email.com",
+      "registrationDate": "2023-03-28"
+    },
+    {
+      "id": "CUST-034",
+      "fullName": "Sandra Price",
+      "email": "sandra.price@email.com",
+      "registrationDate": "2023-04-16"
+    },
+    {
+      "id": "CUST-035",
+      "fullName": "Jonathan Wright",
+      "email": "jonathan.wright@email.com",
+      "registrationDate": "2023-05-24"
+    },
+    {
+      "id": "CUST-036",
+      "fullName": "Karen Bennett",
+      "email": "karen.bennett@email.com",
+      "registrationDate": "2023-06-13"
+    },
+    {
+      "id": "CUST-037",
+      "fullName": "Scott Campbell",
+      "email": "scott.campbell@email.com",
+      "registrationDate": "2023-07-09"
+    },
+    {
+      "id": "CUST-038",
+      "fullName": "Linda Powell",
+      "email": "linda.powell@email.com",
+      "registrationDate": "2023-08-27"
+    },
+    {
+      "id": "CUST-039",
+      "fullName": "Adam Richardson",
+      "email": "adam.richardson@email.com",
+      "registrationDate": "2023-09-18"
+    },
+    {
+      "id": "CUST-040",
+      "fullName": "Betty Cox",
+      "email": "betty.cox@email.com",
+      "registrationDate": "2023-10-31"
+    },
+    {
+      "id": "CUST-041",
+      "fullName": "Jacob Ward",
+      "email": "jacob.ward@email.com",
+      "registrationDate": "2023-11-25"
+    },
+    {
+      "id": "CUST-042",
+      "fullName": "Nancy Peterson",
+      "email": "nancy.peterson@email.com",
+      "registrationDate": "2023-12-14"
+    },
+    {
+      "id": "CUST-043",
+      "fullName": "Brandon Torres",
+      "email": "brandon.torres@email.com",
+      "registrationDate": "2024-01-22"
+    },
+    {
+      "id": "CUST-044",
+      "fullName": "Dorothy Gray",
+      "email": "dorothy.gray@email.com",
+      "registrationDate": "2024-02-17"
+    },
+    {
+      "id": "CUST-045",
+      "fullName": "Carl James",
+      "email": "carl.james@email.com",
+      "registrationDate": "2024-03-06"
+    },
+    {
+      "id": "CUST-046",
+      "fullName": "Ruth Watson",
+      "email": "ruth.watson@email.com",
+      "registrationDate": "2024-04-29"
+    },
+    {
+      "id": "CUST-047",
+      "fullName": "Eugene Brooks",
+      "email": "eugene.brooks@email.com",
+      "registrationDate": "2024-05-15"
+    },
+    {
+      "id": "CUST-048",
+      "fullName": "Sharon Kelly",
+      "email": "sharon.kelly@email.com",
+      "registrationDate": "2024-06-23"
+    },
+    {
+      "id": "CUST-049",
+      "fullName": "Harold Sanders",
+      "email": "harold.sanders@email.com",
+      "registrationDate": "2024-07-10"
+    },
+    {
+      "id": "CUST-050",
+      "fullName": "Frances Long",
+      "email": "frances.long@email.com",
+      "registrationDate": "2024-08-04"
     }
   ]
 }
-
