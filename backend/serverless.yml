@@ -1,16 +1,28 @@
-service: customer-api
-frameworkVersion: '^3.0.0'
+service: customer-data-explorer-backend
+
+frameworkVersion: '3'
+
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ap-southeast-2
-functions:
-  customers:
-    handler: src/handler.handler
-    events:
-      - httpApi:
-          path: /customers
-          method: GET
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${self:provider.stage}
+  httpApi:
+    cors:
+      allowedOrigins:
+        - http://localhost:5173
+        - http://localhost:3000
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
 
 plugins:
   - serverless-esbuild
@@ -20,4 +32,28 @@ custom:
   esbuild:
     bundle: true
     minify: false
+    sourcemap: true
+    exclude:
+      - aws-sdk
     target: node18
+    define:
+      'require.resolve': undefined
+    platform: node
+    concurrency: 10
+
+functions:
+  getCustomers:
+    handler: src/handler.getCustomers
+    events:
+      - httpApi:
+          path: /api/customers
+          method: get
+
+package:
+  patterns:
+    - '!node_modules/**'
+    - '!.git/**'
+    - '!.serverless/**'
+    - '!coverage/**'
+    - '!*.test.js'
+

@@ -2,9 +2,10 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import styled from 'styled-components';
 import { fetchCustomers } from '../api/customer';
-import type { Customer, CustomerResponse, CustomerFilters } from '../types/customer-types';
+import type { Customer, CustomerResponse } from '../types/customer-types';
 import { media, responsivePadding, responsiveFontSize, responsiveButtonPadding } from '../styles/responsive';
 import { Filter } from './Filter';
+import { useCustomerTable } from '../contexts/CustomerTableContext';
 
 // Optimized styled components
 const TableContainer = styled.div`
@@ -175,11 +176,8 @@ const StatusMessage = styled.div<{ $isError?: boolean }>`
 `;
 
 export const CustomerTable = () => {
-    const [page, setPage] = React.useState(1);
-    const [announceText, setAnnounceText] = React.useState('');
-    const [filters, setFilters] = React.useState<CustomerFilters>({});
-    const [tempFilters, setTempFilters] = React.useState<CustomerFilters>({});
-    const pageSize = 20;
+    const { state, actions } = useCustomerTable();
+    const { page, pageSize, filters, tempFilters } = state;
 
     const { data, isLoading, error } = useQuery<CustomerResponse>({
         queryKey: ['customers', page, pageSize, filters],
@@ -193,38 +191,23 @@ export const CustomerTable = () => {
     const handlePreviousPage = () => {
         if (page > 1) {
             const newPage = Math.max(1, page - 1);
-            setPage(newPage);
-            setAnnounceText(`Navigated to page ${newPage} of ${totalPages}`);
+            actions.setPage(newPage);
         }
     };
 
     const handleNextPage = () => {
         if (data && data.items.length === pageSize && page < totalPages) {
             const newPage = page + 1;
-            setPage(newPage);
-            setAnnounceText(`Navigated to page ${newPage} of ${totalPages}`);
+            actions.setPage(newPage);
         }
     };
 
-    // Filter handlers - simplified interface for the Filter component
-    const handleFilterChange = (field: keyof CustomerFilters, value: string) => {
-        setTempFilters(prev => ({
-            ...prev,
-            [field]: value || undefined
-        }));
-    };
-
     const handleApplyFilters = () => {
-        setFilters({ ...tempFilters });
-        setPage(1); // Reset to first page when applying filters
-        setAnnounceText(`Filters applied. Showing ${data?.total || 0} results.`);
+        actions.applyFilters();
     };
 
     const handleClearFilters = () => {
-        setFilters({});
-        setTempFilters({});
-        setPage(1);
-        setAnnounceText('Filters cleared.');
+        actions.clearFilters();
     };
 
     const handleKeyDown = (event: React.KeyboardEvent, action: () => void) => {
@@ -252,14 +235,10 @@ export const CustomerTable = () => {
 
     return (
         <>
-            <div aria-live="polite" aria-atomic="true" className="sr-only">
-                {announceText}
-            </div>
-
             <Filter
                 filters={filters}
                 tempFilters={tempFilters}
-                onFilterChange={handleFilterChange}
+                onFilterChange={actions.updateTempFilter}
                 onApplyFilters={handleApplyFilters}
                 onClearFilters={handleClearFilters}
                 hasActiveFilters={hasActiveFilters}
@@ -285,7 +264,16 @@ export const CustomerTable = () => {
                         </tr>
                     </TableHeader>
                     <tbody>
-                        {data?.items.map((customer: Customer, index: number) => (
+                    {data && data.items.length === 0 ? (
+                            <tr>
+                                <TableCell colSpan={4}>
+                                    <StatusMessage role="status" aria-live="polite">
+                                        No customer found.
+                                    </StatusMessage>
+                                </TableCell>
+                            </tr>
+                        ) :
+                        (data?.items.map((customer: Customer, index: number) => (
                             <TableRow
                                 key={customer.id}
                                 $isEven={index % 2 === 0}
@@ -296,11 +284,15 @@ export const CustomerTable = () => {
                                 <EmailCell>{customer.email}</EmailCell>
                                 <TableCell>
                                     <time dateTime={customer.registrationDate}>
-                                        {new Date(customer.registrationDate).toLocaleDateString()}
+                                        {new Date(customer.registrationDate).toLocaleDateString('en-GB', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: 'numeric'
+                                        })}
                                     </time>
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        )))}
                     </tbody>
                 </StyledTable>
             </TableContainer>
@@ -333,7 +325,7 @@ export const CustomerTable = () => {
                 </PaginationButton>
 
                 <TotalInfo aria-label={`Total customers: ${data?.total || 0}`}>
-                    ({data?.total || 0} total{hasActiveFilters ? ' (filtered)' : ''})
+                    ({data?.total || 0} total {hasActiveFilters ? ' (filtered)' : ''})
                 </TotalInfo>
             </PaginationContainer>
         </>
