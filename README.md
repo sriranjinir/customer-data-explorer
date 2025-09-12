@@ -7,6 +7,8 @@
 - Unit tests (Vitest / Jest)
 - Deploy to S3 + CloudFront and Lambda via Serverless
 
+node version:  v20.19.5+
+
 install:
 backend: npm install -D serverless serverless-offline serverless-esbuild
 frontend: npm install
